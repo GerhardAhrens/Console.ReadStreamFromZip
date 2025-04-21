@@ -11,20 +11,32 @@
 // <summary>
 // Konsolen Applikation mit Menü
 // </summary>
+//
+// <remarks>
+// https://stackoverflow.com/questions/22604941/how-can-i-unzip-a-file-to-a-net-memory-stream
+// </remarks>
 //-----------------------------------------------------------------------
-
-using System;
 
 namespace Console.ReadStreamFromZip
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Compression;
+
     public class Program
     {
+        private static string exePath = string.Empty;
+
         private static void Main(string[] args)
         {
+            /* Pfad der EXE-Datei*/
+            exePath = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
+
             do
             {
                 Console.Clear();
-                Console.WriteLine("1. Menüpunkt 1");
+                Console.WriteLine("1. Create Zip File");
                 Console.WriteLine("2. Menüpunkt 2");
                 Console.WriteLine("X. Beenden");
 
@@ -52,15 +64,56 @@ namespace Console.ReadStreamFromZip
         private static void MenuPoint1()
         {
             Console.Clear();
-            Console.WriteLine("Menüpunkt 1, eine Taste drücken für zurück!");
+
+            IEnumerable<string> files = new DirectoryInfo(exePath).GetFiles("*.txt").Select(s => s.FullName);
+
+            string zipName = Path.Combine(exePath, "ZipContext.zip");
+            ZipHelper.CreateZipFile(zipName, files);
+
             Console.ReadKey();
         }
 
         private static void MenuPoint2()
         {
             Console.Clear();
-            Console.WriteLine("Menüpunkt 2, eine Taste drücken für zurück!");
-            Console.ReadKey();
+
+            string zipName = Path.Combine(exePath, "ZipContext.zip");
+            using (var file = File.OpenRead(zipName))
+            {
+                using (var zip = new ZipArchive(file, ZipArchiveMode.Read))
+                {
+                    foreach (var entry in zip.Entries)
+                    {
+                        using (StreamReader sr = new StreamReader(entry.Open()))
+                        {
+                            Console.WriteLine(sr.ReadToEnd());
+                        }
+                    }
+                }
+            }
+
+           Console.ReadKey();
+        }
+    }
+
+    public static class ZipHelper
+    {
+        /// <summary>
+        /// Create a ZIP file of the files provided.
+        /// </summary>
+        /// <param name="fileName">The full path and name to store the ZIP file at.</param>
+        /// <param name="files">The list of files to be added.</param>
+        public static void CreateZipFile(string fileName, IEnumerable<string> files)
+        {
+            // Create and open a new ZIP file
+            var zip = ZipFile.Open(fileName, ZipArchiveMode.Create);
+            foreach (var file in files)
+            {
+                // Add the entry for each file
+                zip.CreateEntryFromFile(file, Path.GetFileName(file), CompressionLevel.Optimal);
+            }
+            // Dispose of the object when we are done
+            zip.Dispose();
         }
     }
 }

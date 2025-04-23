@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <ApplicationIcon>Resources\Console.Template.ico</ApplicationIcon>
+    <FileVersion>1.0.2025.0</FileVersion>
+    <AssemblyVersion>1.0.2025.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
